@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InediaInfectedAI Config Editor v9</title>
+<style>
+:root{--bg:#0f1319;--panel:#171d25;--panel2:#202833;--text:#e8edf3;--muted:#9ba8b6;--line:#303a47;--accent:#62a8ff;--good:#55d187;--warn:#ffcc66;--bad:#ff6b6b}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:10;background:#111720ee;backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h1{font-size:18px;margin:0 14px 0 0}.spacer{flex:1}
+button,.filebtn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 12px;border-radius:8px;cursor:pointer}
+button:hover,.filebtn:hover{border-color:var(--accent)} .primary{background:#1769c2;border-color:#2b80df}.danger{border-color:#6d3434}
+input[type=file]{display:none}
+.search{width:min(340px,100%);background:#0c1117;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:calc(100vh - 62px)}
+nav{border-right:1px solid var(--line);padding:14px;position:sticky;top:62px;height:calc(100vh - 62px);overflow:auto}
+nav button{display:block;width:100%;text-align:left;margin:5px 0;background:transparent}
+main{padding:18px;max-width:1250px;width:100%}
+.notice{background:#152234;border:1px solid #28496f;padding:12px 14px;border-radius:10px;margin-bottom:16px;color:#cfe5ff}
+.section{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:0 0 14px;overflow:hidden}
+.section>summary{cursor:pointer;padding:14px 16px;font-weight:700;font-size:16px;background:#1a222c}
+.sectionbody{padding:10px 14px 14px}
+.field{display:grid;grid-template-columns:minmax(260px,1.2fr) minmax(220px,1fr);gap:14px;align-items:center;padding:10px 4px;border-bottom:1px solid #252e39}
+.field:last-child{border-bottom:0}.name{font-weight:600;overflow-wrap:anywhere}.path{font-size:11px;color:var(--muted);font-family:ui-monospace,monospace}
+.control{display:flex;gap:8px;align-items:center}.control input[type=number],.control input[type=text],textarea{width:100%;background:#0d1218;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+textarea{min-height:92px;font-family:ui-monospace,monospace;resize:vertical}
+.switch{position:relative;width:46px;height:25px;display:inline-block}.switch input{display:none}.slider{position:absolute;inset:0;background:#3b4653;border-radius:99px;cursor:pointer}.slider:before{content:"";position:absolute;width:19px;height:19px;left:3px;top:3px;background:white;border-radius:50%;transition:.15s}.switch input:checked+.slider{background:var(--good)}.switch input:checked+.slider:before{transform:translateX(21px)}
+.badge{font-size:11px;padding:2px 7px;border-radius:99px;background:#26303b;color:#cbd5df}.on{color:var(--good)}.off{color:var(--muted)}
+.groupbox{border:1px solid #293442;border-radius:9px;padding:8px;margin:7px 0}.groupbox summary{cursor:pointer;font-weight:600}
+.footer{color:var(--muted);font-size:12px;margin:22px 0}
+#status{font-size:12px;color:var(--good)}
+@media(max-width:800px){.layout{grid-template-columns:1fr}nav{display:none}.field{grid-template-columns:1fr}.search{order:10;width:100%}}
+
+.jpGuide{font-size:13px;line-height:1.55;margin:7px 0 9px;padding:9px 11px;border-left:3px solid #4c8bf5;background:rgba(76,139,245,.08);border-radius:5px}
+.jpGuide .jpTitle{font-weight:700;font-size:14px}
+.jpGuide .jpDesc{opacity:.86;margin-top:2px}
+.jpGuide .jpUnit{display:inline-block;margin-top:4px;font-size:11px;padding:1px 6px;border:1px solid rgba(127,127,127,.35);border-radius:10px}
+.wikiNote{font-size:12px;opacity:.75;margin:8px 0}
+
+.editList{margin:8px 0;padding:10px;border:1px solid rgba(127,127,127,.28);border-radius:8px}
+.editListRow{display:flex;gap:6px;margin:5px 0;align-items:center}.editListRow input{flex:1}.editListRow button{padding:5px 9px}
+.editListTitle{font-size:12px;font-weight:700;margin-bottom:6px}.editListAdd{margin-top:6px}
+
+.overrideEditor{margin:9px 0;padding:10px;border:1px solid rgba(127,127,127,.30);border-radius:8px}
+.overrideTitle{font-weight:700;font-size:12px;margin-bottom:6px}
+.overrideRow{display:grid;grid-template-columns:minmax(150px,1fr) minmax(100px,160px) auto;gap:7px;margin:5px 0;align-items:center}
+.overrideRow input{width:100%;box-sizing:border-box}
+.overrideHint{font-size:11px;opacity:.72;margin:4px 0 8px}
+.overrideAdd{margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+<h1>InediaInfectedAI Config Editor v9</h1>
+<label class="filebtn">JSONを開く<input id="file" type="file" accept=".json,application/json"></label>
+<button id="saveLocal">設定を保存（JSONダウンロード）</button>
+<button id="restoreLocal">設定を復元</button>
+<button id="reset" class="danger">公式初期設定に戻す</button>
+<button id="validate">検証</button>
+<button id="export" class="primary">JSONを出力</button>
+<div class="spacer"></div><span id="status">オフライン動作</span>
+<input id="search" class="search" placeholder="設定名・パスを検索">
+</header>
+<div class="layout">
+<nav id="nav"></nav>
+<main>
+<div class="notice">
+このHTMLは単体で動作し、外部通信を行いません。今回提供されたWiki公式初期設定JSONを初期値として内蔵しています。起動時は常に公式初期設定から開始します。主要設定には日本語ガイドと単位表示を追加しています。
+0/1型の有効・無効項目はトグル、数値は数値入力、文字列はテキスト、配列・複雑なオブジェクトはJSON編集欄として表示します。
+</div>
+<div id="app"></div>
+<div class="footer">出力時はブラウザ内の現在値から InediaInfectedAIConfig.json を生成します。サーバー上のファイルを直接変更する機能はありません。</div>
+</main>
+</div>
+<script>
+const DEFAULT_CONFIG = {"Zombies":{"Groups":{"~~mediumstr":["medics","industrial","priests","prisoners"],"~~~animals":["AnimalBase"],"~bears":["Animal_UrsusArctos"],"~medics":["ZmbF_DoctorSkinny_Base","ZmbF_NurseFat_Base","ZmbF_ParamedicNormal_Base","ZmbM_ParamedicNormal_Base","ZmbM_DoctorFat_Base","ZmbF_PatientOld_Base","ZmbM_PatientSkinny_Base"],"~fishermen":["ZmbM_FishermanOld_Base"],"~police":["ZmbF_PoliceWomanNormal_Base","ZmbM_PolicemanFat_Base","ZmbM_PolicemanSpecForce_Base"],"~prisoners":["ZmbM_PrisonerSkinny_Base"],"~city":["ZmbF_CitizenANormal_Base","ZmbF_CitizenBSkinny_Base","ZmbF_Clerk_Normal_Base","ZmbF_Clerk_Normal_LT_Base","ZmbF_JournalistNormal_Base","ZmbF_JournalistNormal_LT_Base","ZmbF_ShortSkirt_Base","ZmbF_ShortSkirt_LT_Base","ZmbF_SkaterYoung_Base","ZmbM_SkaterYoung_Base","ZmbM_SkaterYoung_LT_Base","ZmbF_SurvivorNormal_Base","ZmbF_SurvivorNormal_LT_Base","ZmbM_CitizenASkinny_Base","ZmbM_CitizenASkinny_LT_Base","ZmbM_CitizenBFat_Base","ZmbM_ClerkFat_Base","ZmbM_ClerkFat_LT_Base","ZmbF_ClerkFat_Base","ZmbM_CommercialPilotOld_Base","ZmbM_CommercialPilotOld_LT_Base","ZmbM_JournalistSkinny_Base","ZmbM_MotobikerFat_Base"],"~~mediumdef":["medics","industrial","priests","prisoners"],"~cattle":["Animal_BosTaurus","Animal_BosTaurusF","Horse_Base"],"~~highstr":["military","police","firefighters","hunters","ZmbM_Gamedev_Base"],"~~lowstr":["city","villagers","fishermen"],"~hunters":["ZmbM_HunterOld_Base"],"~~highdef":["military","police","firefighters","hunters","ZmbM_Gamedev_Base"],"~priests":["ZmbM_priestPopSkinny_Base"],"~~lowdef":["city","villagers","fishermen"],"~villagers":["ZmbF_Runner_Base","ZmbF_MilkMaidOld_Base","ZmbF_MilkMaidOld_LT_Base","ZmbF_VillagerOld_Base","ZmbF_VillagerOld_LT_Base","ZmbM_FarmerFat_Base","ZmbM_FarmerFat_LT_Base","ZmbM_Jacket_Base","ZmbM_Jacket_LT_Base","ZmbM__Runner_Base","ZmbM_VillagerOld_Base","ZmbM_VillagerOld_LT_Base","ZmbF_HikerSkinny_Base","ZmbM_HermitSkinny_Base","ZmbM_HikerSkinny_Base"],"~firefighters":["ZmbM_FirefighterNormal_Base"],"~~predators":["bears","wolves"],"~industrial":["ZmbF_BlueCollarFat_Base","ZmbF_MechanicNormal_Base","ZmbM_ConstrWorkerNormal_Base","ZmbM_HandymanNormal_Base","ZmbM_HeavyIndustryWorker_Base","ZmbM_MechanicSkinny_Base","ZmbM_OffshoreWorker_Base"],"~military":["ZmbM_SoldierNormal_Base"],"~wolves":["Animal_CanisLupus"]},"CustomIrritants":{"matches":{"Classes":["Single_Match","New_Candle","PetrolLighter"],"RadiusOutdoorDay":0.0,"RadiusOutdoorNight":40.0,"RadiusIndoorDay":0.0,"RadiusIndoorNight":8.0,"Type":0.0,"Priority":1.0}},"ThrowingProjectiles":{"PoliceProjectile":{"ItemClasses":["Glock19","MakarovIJ70","Mp133Shotgun","CombatKnife","CombatKnife"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"MedicsProjectile":{"ItemClasses":["GlassBottle","KitchenKnife","KitchenKnife","SteakKnife","GasMask_Filter","IodineTincture","DisinfectantAlcohol","DisinfectantSpray"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"GarbageIfPlayerInWater":{"ItemClasses":["WoodenStick","SmallStone"],"Parameters":{"ThrowConditionTargetInWater":1.0,"TargetBleedingChancePercent":5.0,"TargetStunChancePercent":50.0,"TargetShockDamage":20.0,"TargetHealthDamage":5.0,"ThrowConditionCooldownSeconds":5.0}},"MilitaryProjectile":{"ItemClasses":["Binoculars","Ssh68Helmet","GorkaHelmet","BallisticHelmet_Green","Canteen","CombatKnife","AK_Bayonet","SKS_Bayonet","M9A1_Bayonet","Mosin_Bayonet"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"CityProjectile":{"ItemClasses":["GlassBottle","WaterBottle","BaseballBat","Pipe","Flashlight","CombinationLock","KitchenKnife","KitchenKnife","SteakKnife"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"FlashGrenade":{"ItemClasses":["FlashGrenade"],"Parameters":{"DestroyProjectileAfterSeconds":-1.0,"ThrowConditionAmountOfProjectiles":1.0,"ActivateGrenadeAfterSeconds":0.0}},"GasGrenade":{"ItemClasses":["Grenade_ChemGas"],"Parameters":{"DestroyProjectileAfterSeconds":-1.0,"ThrowConditionAmountOfProjectiles":1.0,"ActivateGrenadeAfterSeconds":0.0}},"VillagersProjectile":{"ItemClasses":["GlassBottle","FryingPan","Firewood","Pot","Hammer","MeatTenderizer","KitchenKnife","Pitchfork","Hatchet","Sickle","WoodAxe","Cleaver","Shovel","FarmingHoe"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"GarbageIfPlayerOnObstacle":{"ItemClasses":["WoodenStick","SmallStone"],"Parameters":{"ThrowConditionZombieTargetVerticalDistanceMin":0.5,"TargetBleedingChancePercent":5.0,"TargetStunChancePercent":50.0,"ThrowConditionGroundTargetDistanceMin":0.5,"TargetShockDamage":20.0,"TargetHealthDamage":5.0,"ThrowConditionCooldownSeconds":5.0}},"IndustrialProjectile":{"ItemClasses":["GlassBottle","Pipe","PipeWrench","Wrench","LugWrench","Hammer","WeldingMask","Crowbar","HandSaw","Hacksaw","Screwdriver","Pliers"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"GarbageIfPlayerNonObstacle":{"ItemClasses":["WoodenStick","SmallStone"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"TargetBleedingChancePercent":5.0,"TargetStunChancePercent":50.0,"TargetShockDamage":20.0,"TargetHealthDamage":5.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"FirefightersProjectile":{"ItemClasses":["FirefightersHelmet_Red","FirefightersHelmet_White","FirefightersHelmet_Yellow","FirefighterAxe","FirefighterAxe"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"FishermenProjectile":{"ItemClasses":["GlassBottle","HuntingKnife","KitchenKnife","Canteen","FishingRod","Shovel"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"HuntersProjectile":{"ItemClasses":["GlassBottle","HuntingKnife","HuntingKnife","Canteen","Binoculars"],"Parameters":{"ThrowConditionAmountOfProjectiles":2.0,"ThrowConditionThrowChancePercent":10.0,"ThrowConditionCooldownSeconds":10.0}},"HEGrenade":{"ItemClasses":["RGD5Grenade","M67Grenade"],"Parameters":{"DestroyProjectileAfterSeconds":-1.0,"ThrowConditionAmountOfProjectiles":1.0,"ActivateGrenadeAfterSeconds":5.0}}},"BreakingDoorsHandlerIsActive":{"all":1},"BreakingDoorsRestrictedDoors":{"all":{"jmc_dungeon_Door06_Double":[],"DNA_Lockout_ColourBase":[],"Jmc_Security_Door_Carrier":[],"DNA_Strongroom_Open_Base":[],"land_bunker_door_area04":[],"Land_KlimaX_T3Door":[],"DNA_Door_NoLock_ColourBase":[],"Land_WarheadStorage_Main":[],"DNA_WarpDoor_NoLock":[],"Jmc_Security_Door":[],"DNA_Lockout_Dbl_ColourBase":[],"land_bunker_entrance":[],"land_bunker_entrance1":[],"land_bunker_entrance2":[],"ContainerLockedBase":[],"Land_KlimaX_T2Door":[],"DNA_Strongroom_ColourBase":[],"land_bunker_door_base":[],"EVG_KeycardDoor":[],"DNA_Lockout_OneWayDoor":[],"DNA_Door_NoLock_Dbl_ColourBase":[],"Land_KlimaX_T1Door":[],"DNA_LockoutSteel_ColourBase":[]}},"BreakingDoorsDestroyAfterOpenChancePercent":{"all":30.0,"highstr":50.0,"mediumstr":40.0,"lowstr":30.0},"BreakingDoorsOpenChancePercent":{"all":30.0,"highstr":50.0,"mediumstr":40.0,"lowstr":30.0},"BreakingDoorsOpenLockPickChancePercent":{"all":5.0},"BreakingDoorsLossInterestAfterHitChancePercent":{"all":5.0},"BreakingDoorsLossInterestAfterHitLockPickChancePercent":{"all":25.0},"BreakingDoorsCrawlersChanceMultiplier":{"all":0.0},"AttackPlayersUnconsciousHandlerIsActive":{"all":1},"AttackPlayersUnconsciousHealthDamageLimit":{"all":20.0},"AttackAnimalsHandlerIsActive":{"all":1},"AttackAnimalsWildBoar":{"all":1},"AttackAnimalsPig":{"all":1},"AttackAnimalsSheep":{"all":1},"AttackAnimalsDeer":{"all":1},"AttackAnimalsRoeDeer":{"all":1},"AttackAnimalsGoat":{"all":1},"AttackAnimalsCow":{"all":1},"AttackAnimalsCustom":{"all":{"all":0}},"FriendlyNPC":{"all":[]},"SearchHandlerIsActive":{"all":1},"SearchSphereRadiusIncreaseEverySeconds":{"all":0.20000000298023224},"SearchSphereDistanceToRadiusMultiplier":{"all":0.30000001192092896},"SearchSphereRadiusMin":{"all":0.0},"SearchSphereRadiusMax":{"all":40.0},"SearchSphereRadiusBurst":{"all":60.0},"SpeedHandlerIsActive":{"all":1},"SpeedMinimumInCalmMode":{"all":0.0},"SpeedLimitInCalmMode":{"all":3.0},"SpeedMultiplierInCalmMode":{"all":1.0},"SpeedMinimumInSearchMode":{"all":0.0},"SpeedLimitInSearchMode":{"all":3.0},"SpeedMultiplierInSearchMode":{"all":1.0},"SpeedMinimumInChaseMode":{"all":0.0},"SpeedLimitInChaseMode":{"all":3.0},"SpeedMultiplierInChaseMode":{"all":1.0},"SpeedNoLimitsFromDistanceMeters":{"all":0.0},"SmellsHandlerIsActive":{"all":1},"SmellsSphereRadiusInCalmMode":{"all":1.0},"SmellsSphereRadiusInSearchMode":{"all":3.0},"SmellsChaseMultiplier":{"all":0.6000000238418579},"SmellsAllowStealthKills":{"all":1},"SmellsLossInterestAfterReactionForSeconds":{"all":0.0},"SmellsDisableVanillaIrritationSound":{"all":0},"LongVisionHandlerIsActive":{"all":1},"LongVisionMetersInSearchModeDay":{"all":120.0},"LongVisionMetersInSearchModeNight":{"all":0.0},"LongVisionMetersInCalmModeDay":{"all":0.0},"LongVisionMetersInCalmModeNight":{"all":0.0},"LongVisionVisualAcuityInSearchModeDay":{"all":1.0},"LongVisionVisualAcuityInSearchModeNight":{"all":1.0},"LongVisionVisualAcuityInCalmModeDay":{"all":0.10000000149011612},"LongVisionVisualAcuityInCalmModeNight":{"all":0.10000000149011612},"LongVisionPersistAfterIrritationSeconds":{"all":300.0},"LongVisionAllowIgnoreWeather":{"all":0},"ReturnToSpawnHandlerIsActive":{"all":1},"ReturnToSpawnRadiusMeters":{"all":60.0},"UpJumpHandlerIsActive":{"all":1},"UpJumpHeightMax":{"all":1.7999999523162842},"UpJumpImpulseDamageChancePercent":{"all":50.0},"UpJumpChancePercent":{"all":100.0},"UpJumpCooldownSeconds":{"all":0.0},"DownJumpHandlerIsActive":{"all":1},"DownJumpHeightMax":{"all":30.0},"StuckJumpHandlerIsActive":{"all":1},"FallHandlerIsActive":{"all":1},"FallHandlerLegBreakHeightMin":{"all":3.0},"FallHandlerLegBreakHeightMax":{"all":15.0},"FallHandlerDeathHeightMin":{"all":10.0},"FallHandlerDeathHeightMax":{"all":20.0},"InjuryHandlerIsActive":{"all":1},"InjuryHandlerInjuryOnExplosiveDamageChancePercent":{"all":100.0},"InjuryHandlerDamageThresholdToInjuryArm":{"all":30.0},"InjuryHandlerRestoreInjuredArmAfterSeconds":{"all":0.0},"InjuryHandlerInjuredOneArmAttackMultiplier":{"all":0.5},"InjuryHandlerInjuredBothArmsAttackMultiplier":{"all":0.20000000298023224},"InjuryHandlerInjuredOneArmBreakingDoorChanceMultiplier":{"all":0.5},"InjuryHandlerInjuredBothArmsBreakingDoorChanceMultiplier":{"all":0.0},"InjuryHandlerInjuredOneArmStunChanceMultiplier":{"all":0.5},"InjuryHandlerInjuredBothArmsStunChanceMultiplier":{"all":0.0},"InjuryHandlerInjuredOneArmPainMultiplier":{"all":0.5},"InjuryHandlerInjuredBothArmsPainMultiplier":{"all":0.20000000298023224},"InjuryHandlerInjuredOneArmBleedingChanceMultiplier":{"all":0.5},"InjuryHandlerInjuredBothArmsBleedingChanceMultiplier":{"all":0.0},"InjuryHandlerSpawnWithInjuredOneArmChancePercent":{"all":0.0},"InjuryHandlerSpawnWithInjuredBothArmsChancePercent":{"all":0.0},"InjuryHandlerDamageThresholdToInjuryLeg":{"all":30.0,"bears":50.0},"InjuryHandlerRestoreInjuredLegAfterSeconds":{"all":0.0,"animals":900.0},"InjuryHandlerInjuredOneLegSpeedLimit":{"all":2.0999999046325684},"InjuryHandlerInjuredBothLegsSpeedLimit":{"all":1.0},"InjuryHandlerInjuredOneLegJumpHeightMultiplier":{"all":0.5},"InjuryHandlerInjuredBothLegsJumpHeightMultiplier":{"all":0.0},"InjuryHandlerSpawnWithInjuredOneLegChancePercent":{"all":0.0},"InjuryHandlerSpawnWithInjuredBothLegsChancePercent":{"all":0.0},"AttackCarHandlerIsActive":{"all":1},"AttackCarPlayersIsActive":{"all":1},"AttackCarPlayersDistanceMeters":{"all":2.0},"AttackCarElementsIsActive":{"wolves":0,"all":1},"AttackCarElementsDistanceMeters":{"all":2.0},"AttackCarElementsGlobalDamageMultiplier":{"all":1.0,"bears":3.0},"AttackCarElementsByCollisionsIsActive":{"all":1},"AttackCarElementsByCollisionsGlobalDamageMultiplier":{"all":1.0},"AttackCarElementsMultiplierByCarClassId":{"all":{"all":1.0,"ExpansionTractor":0.3499999940395355,"Expansion_Landrover":0.6000000238418579,"OffroadHatchback":0.800000011920929,"ExpansionUh1h":0.30000001192092896,"Truck_01_Covered":0.3499999940395355,"Offroad_02":0.20000000298023224,"ExpansionMh6":0.4000000059604645,"ExpansionMerlin":0.20000000298023224,"ExpansionVodnik":0.20000000298023224,"ExpansionUAZ":0.6000000238418579,"ExpansionBus":0.3499999940395355}},"AttackCarWindowDamagePercent":{"all":25.0},"AttackCarDoorDamagePercent":{"all":20.0},"AttackCarDoorChancePercent":{"all":60.0},"AttackCarRadiatorDamagePercent":{"all":10.0},"AttackCarCarBatteryDamagePercent":{"all":10.0},"AttackCarPlugDamagePercent":{"all":25.0},"AttackCarEngineDamagePercent":{"all":10.0},"AttackCarLightsDamagePercent":{"all":50.0},"AttackCarFenderDamagePercent":{"all":10.0},"AttackCarBumperDamagePercent":{"all":10.0},"AttackCarHoodDamagePercent":{"all":10.0},"AttackCarFuelTankDamagePercent":{"all":5.0},"ReactHandlerIsActive":{"all":1},"ReactBehindVisualMultiplier":{"all":0.20000000298023224},"ReactBehindNoiseMultiplier":{"all":0.6000000238418579},"ReactFireplaceVisual":{"all":1.0},"ReactFireplaceDayVisual":{"all":1.0},"ReactFlashlightsVisual":{"all":1.0},"ReactHeadtorchRedVisual":{"all":1.0},"ReactRoadflareVisual":{"all":1.0},"ReactRoadflareNoise":{"all":1.0},"ReactChemlightVisual":{"all":1.0},"ReactChemlightRedVisual":{"all":1.0},"ReactPortableGasLampVisual":{"all":1.0},"ReactFlammablesVisual":{"all":1.0},"ReactSpotlightVisual":{"all":1.0},"ReactCarLightVisual":{"all":1.0},"ReactPowerGeneratorNoise":{"all":1.0},"ReactCarHornNoise":{"all":1.0},"ReactAlarmClockNoise":{"all":1.0},"ReactKitchenTimerNoise":{"all":1.0},"ReactFuelStationNoise":{"all":1.0},"ReactFireworksNoise":{"all":1.0},"ReactExplosiveItemNoise":{"all":1.0},"ReactCarEngineNoise":{"all":1.0},"ReactSmokeGrenadeVisual":{"all":1.0},"ReactScreamNoise":{"all":1.0},"ReactWeaponShotNoise":{"all":1.0},"ReactFriendlyWeaponShotNoise":{"all":0.0},"ReactFootstepsJogDayNoise":{"all":1.0},"ReactFootstepsJogNightNoise":{"all":1.0},"ReactFootstepsCrouchSprintDayNoise":{"all":0.699999988079071},"ReactFootstepsCrouchSprintNightNoise":{"all":0.699999988079071},"ReactFootstepsSprintDayNoise":{"all":1.0},"ReactFootstepsSprintNightNoise":{"all":1.0},"ReactHorseHoofstepsDayNoise":{"all":1.0},"ReactHorseHoofstepsNightNoise":{"all":1.0},"ReactDoorsDayNoise":{"all":1.0},"ReactDoorsNightNoise":{"all":1.0},"ReactPlayerFallDayNoise":{"all":1.0},"ReactPlayerFallNightNoise":{"all":1.0},"ReactBodyfallDayNoise":{"all":0.5},"ReactBodyfallNightNoise":{"all":0.5},"ReactBodyfallBackstabDayNoise":{"all":0.0},"ReactBodyfallBackstabNightNoise":{"all":0.0},"ReactSymptomsDayNoise":{"all":1.0},"ReactSymptomsNightNoise":{"all":1.0},"ReactVoiceWhisperDayNoise":{"all":1.0},"ReactVoiceWhisperNightNoise":{"all":1.0},"ReactVoiceTalkDayNoise":{"all":1.0},"ReactVoiceTalkNightNoise":{"all":1.0},"ReactVoiceShoutDayNoise":{"all":1.0},"ReactVoiceShoutNightNoise":{"all":1.0},"ReactMiningLightDayNoise":{"all":1.0},"ReactMiningLightNightNoise":{"all":1.0},"ReactMiningHardDayNoise":{"all":1.0},"ReactMiningHardNightNoise":{"all":1.0},"ReactBuildingDayNoise":{"all":1.0},"ReactBuildingNightNoise":{"all":1.0},"ReactSawPlanksDayNoise":{"all":1.0},"ReactSawPlanksNightNoise":{"all":1.0},"ReactVanillaMindstateChange":{"all":1.0},"ReactCustomIrritants":{"all":{"matches":{"React":1.0,"Destroy":1.0}}},"ReactAndDestroyFlashlightsVisual":{"all":1.0},"ReactAndDestroyHeadtorchRedVisual":{"all":1.0},"ReactAndDestroyRoadflareVisual":{"all":1.0},"ReactAndDestroyRoadflareNoise":{"all":1.0},"ReactAndDestroyChemlightVisual":{"all":1.0},"ReactAndDestroyChemlightRedVisual":{"all":1.0},"ReactAndDestroyPortableGasLampVisual":{"all":1.0},"ReactAndDestroyFlammablesVisual":{"all":0.5},"ReactAndDestroySpotlightVisual":{"all":0.25},"ReactAndDestroyFireplaceVisual":{"all":0.25},"ReactAndDestroyFireplaceDayVisual":{"all":0.25},"ReactAndDestroyCarLightVisual":{"all":1.0},"ReactAndDestroyFireworksNoise":{"all":0.25},"ReactAndDestroyPowerGeneratorNoise":{"all":0.10000000149011612},"ReactAndDestroyAlarmClockNoise":{"all":1.0},"ReactAndDestroyKitchenTimerNoise":{"all":1.0},"ReactAndDestroySmokeGrenadeVisual":{"all":0.5},"DamageToPlayerHandlerIsActive":{"all":1},"DamageToPlayerHealthMultiplier":{"all":1.2000000476837158,"highstr":1.399999976158142,"mediumstr":1.2999999523162842,"lowstr":1.2000000476837158},"DamageToPlayerInBlockHealthMultiplier":{"all":0.6000000238418579,"highstr":0.699999988079071,"mediumstr":0.6499999761581421,"lowstr":0.6000000238418579},"DamageToPlayerShockMultiplier":{"all":1.2000000476837158,"highstr":1.399999976158142,"mediumstr":1.2999999523162842,"lowstr":1.2000000476837158},"DamageToPlayerInBlockShockMultiplier":{"all":0.6000000238418579,"highstr":0.699999988079071,"mediumstr":0.6499999761581421,"lowstr":0.6000000238418579},"DamageToPlayerStaminaPercent":{"all":12.0,"highstr":20.0,"mediumstr":16.0,"lowstr":12.0},"DamageToPlayerInBlockStaminaPercent":{"all":6.0,"highstr":10.0,"mediumstr":8.0,"lowstr":6.0},"DamageToPlayerBloodPercent":{"all":0.0},"DamageToPlayerInBlockBloodPercent":{"all":0.0},"DamageToPlayerBleedingHandlerIsActive":{"all":1},"DamageToPlayerBleedingChancePercent":{"all":10.0,"highstr":16.0,"mediumstr":13.0,"lowstr":10.0},"DamageToPlayerInBlockBleedingChancePercent":{"all":5.0,"highstr":8.0,"mediumstr":6.5,"lowstr":5.0},"StunToPlayerChancePercent":{"all":25.0,"highstr":35.0,"mediumstr":30.0,"lowstr":25.0},"StunToPlayerInBlockChancePercent":{"all":12.5,"highstr":17.5,"mediumstr":15.0,"lowstr":12.5},"DisarmToPlayerChancePercent":{"all":0.0},"DisarmToPlayerInBlockChancePercent":{"all":0.0},"FastAttackToPlayerChancePercent":{"all":100.0},"DiseasesToPlayerHandlerIsActive":{"all":1},"DiseasesToPlayerAgents":{"all":[],"predators":[{"AgentId":64,"AddChance":10.0,"AddChanceInBlock":5.0,"AddAmount":10.0,"AddAmountInBlock":5.0,"AddAmountNoMoreThan":50.0,"AddOnlyIfBleeding":1,"AddOnlyToPlayers":1}],"highstr":[{"AgentId":64,"AddChance":20.0,"AddChanceInBlock":10.0,"AddAmount":10.0,"AddAmountInBlock":5.0,"AddAmountNoMoreThan":50.0,"AddOnlyIfBleeding":1,"AddOnlyToPlayers":1}],"lowstr":[{"AgentId":64,"AddChance":10.0,"AddChanceInBlock":5.0,"AddAmount":10.0,"AddAmountInBlock":5.0,"AddAmountNoMoreThan":50.0,"AddOnlyIfBleeding":1,"AddOnlyToPlayers":1}],"mediumstr":[{"AgentId":64,"AddChance":15.0,"AddChanceInBlock":7.5,"AddAmount":10.0,"AddAmountInBlock":5.0,"AddAmountNoMoreThan":50.0,"AddOnlyIfBleeding":1,"AddOnlyToPlayers":1}]},"CameraShakeToPlayerIntensity":{"all":10.0},"PainToPlayerHandlerIsActive":{"all":1},"PainToPlayerHeadMultiplier":{"all":1.2000000476837158,"SurvivorBase":1.0,"highstr":1.399999976158142,"lowstr":1.2000000476837158,"mediumstr":1.2999999523162842},"PainToPlayerHeadInBlockMultiplier":{"all":0.6000000238418579,"SurvivorBase":0.5,"highstr":0.699999988079071,"lowstr":0.6000000238418579,"mediumstr":0.6499999761581421},"PainToPlayerArmsMultiplier":{"all":1.2000000476837158,"SurvivorBase":1.0,"highstr":1.399999976158142,"lowstr":1.2000000476837158,"mediumstr":1.2999999523162842},"PainToPlayerArmsInBlockMultiplier":{"all":0.6000000238418579,"SurvivorBase":0.5,"highstr":0.699999988079071,"lowstr":0.6000000238418579,"mediumstr":0.6499999761581421},"PainToPlayerArmsDisarmMultiplier":{"all":0.30000001192092896,"SurvivorBase":0.30000001192092896,"highstr":0.5,"lowstr":0.30000001192092896,"mediumstr":0.4000000059604645},"PainToPlayerArmsInBlockDisarmMultiplier":{"all":0.15000000596046448,"SurvivorBase":0.15000000596046448,"highstr":0.25,"lowstr":0.15000000596046448,"mediumstr":0.20000000298023224},"PainToPlayerLegsMultiplier":{"all":1.2000000476837158,"SurvivorBase":1.0,"highstr":1.399999976158142,"lowstr":1.2000000476837158,"mediumstr":1.2999999523162842},"PainToPlayerLegsInBlockMultiplier":{"all":0.6000000238418579,"SurvivorBase":0.5,"highstr":0.699999988079071,"lowstr":0.6000000238418579,"mediumstr":0.6499999761581421},"PainToPlayerTorsoMultiplier":{"all":1.2000000476837158,"SurvivorBase":1.0,"highstr":1.399999976158142,"lowstr":1.2000000476837158,"mediumstr":1.2999999523162842},"PainToPlayerTorsoInBlockMultiplier":{"all":0.6000000238418579,"SurvivorBase":0.5,"highstr":0.699999988079071,"lowstr":0.6000000238418579,"mediumstr":0.6499999761581421},"PainToPlayerLimbsBreakChancesMultiplier":{"all":1.0},"PainToPlayerLimbsDeepWoundChancesMultiplier":{"all":1.0},"DamageToZombieHandlerIsActive":{"all":1},"DamageToZombieHealthPoints":{"all":-1.0},"DamageToZombieHealthPointsLeg":{"all":-1.0},"DamageToZombieHeadMeleeMultiplier":{"mediumdef":0.30000001192092896,"all":0.4000000059604645,"lowdef":0.4000000059604645,"highdef":0.20000000298023224},"DamageToZombieHeadRangeMultiplier":{"all":1.0},"DamageToZombieBodyMeleeMultiplier":{"mediumdef":0.30000001192092896,"all":0.4000000059604645,"lowdef":0.4000000059604645,"highdef":0.20000000298023224},"DamageToZombieBodyRangeMultiplier":{"mediumdef":0.30000001192092896,"all":0.4000000059604645,"lowdef":0.4000000059604645,"highdef":0.20000000298023224},"DamageToZombieFromCarsMultiplier":{"mediumdef":0.30000001192092896,"all":0.4000000059604645,"lowdef":0.4000000059604645,"highdef":0.20000000298023224},"DamageToZombieFromExplosionsMultiplier":{"mediumdef":0.30000001192092896,"all":0.4000000059604645,"lowdef":0.4000000059604645,"highdef":0.20000000298023224},"DamageToZombieFromHotItemsHp":{"all":10.0},"DamageToZombieBodyPartsPiercingIsActive":{"all":1},"DamageToZombieAlwaysKillOnBackstab":{"all":1},"DamageToZombieShockToStunHandlerIsActive":{"all":1},"DamageToZombieShockToStunLightHeavyAnimationThresholdMeleeHeavy":{"all":0.0},"DamageToZombieShockToStunLightHeavyAnimationThresholdRange":{"all":70.0},"DamageToZombieShockToStunThresholdMeleeHeavy":{"all":0.0},"DamageToZombieShockToStunThresholdRange":{"all":0.0},"DamageToZombieShockToStunFromButtstockHit":{"all":2.0},"DamageToZombieShockToStunCumulativeDamage":{"all":1},"DamageToZombieShockToStunCumulativeDamageTimeFrameSeconds":{"all":0.10000000149011612},"DamageToZombieShockToStunIgnoreMeleeHitChancePercent":{"all":10.0},"DamageToZombieShockToStunIgnoreRangedHitChancePercent":{"all":10.0},"DamageToZombieShockToStunImmunityAfterMeleeHitSeconds":{"all":4.0},"DamageToZombieShockToStunImmunityAfterRangedHitSeconds":{"all":4.0},"DamageToZombieWeaponsMultipliers":{"all":{"all":1.0}},"MeleeAttacksDodgeHandlerIsActive":{"all":1},"MeleeAttacksDodgeChance":{"all":50.0},"MeleeAttacksDodgeCooldownSeconds":{"all":10.0},"JumpAttackHandlerIsActive":{"all":1},"JumpAttackChance":{"all":10.0},"JumpAttackCooldownSeconds":{"all":60.0},"BloodHandlerIsActive":{"all":1},"BloodVolumeMl":{"all":0.0,"cattle":30000.0,"bears":15000.0},"BloodLossRateMinMl":{"all":5.0},"BloodLossRateMaxMl":{"all":60.0,"cattle":120.0,"bears":120.0},"BloodLossRateRegenMl":{"all":0.20000000298023224},"BloodOnExplosiveDamageChancePercent":{"all":50.0},"BloodSplatParticlesIsActive":{"all":1},"BloodTrailParticlesIsActive":{"all":1},"BloodPoolParticlesIsActive":{"all":1},"ResistContaminatedEffectHandlerIsActive":{"all":1},"ResistContaminatedEffect":{"all":0,"SurvivorBase":0,"ZmbM_Mummy":1,"ZmbM_NBC_Grey":1,"ZmbM_NBC_Yellow":1},"AllowCrawling":{"all":1},"RespawnInCrawlingChancePercent":{"all":0.0},"ScreamHandlerIsActive":{"all":1},"ScreamAttractsZombiesInRadius":{"all":50.0,"ZmbM_usSoldier_Officer_Desert":120.0},"ScreamChancePercent":{"all":25.0,"ZmbM_usSoldier_Officer_Desert":100.0},"ScreamCooldownSeconds":{"all":60.0},"ScreamNearbyInfectedSilenceSeconds":{"all":60.0},"SearchBodyToViewCargo":{"all":1},"SearchBodyToViewCargoSeconds":{"all":3.0},"SearchBodyExtendLootingToPlayersInRadiusMeters":{"all":30.0},"SearchBodyOnlyEmptyHands":{"all":0},"SearchBodyWithoutGlovesBloodyHandsChancePercent":{"all":50.0},"SearchBodyWithoutMaskVomitChancePercent":{"all":10.0},"CanBeButchered":{"all":1},"ButcheringSeconds":{"all":20.0},"ButcheringWithoutGlovesBloodyHandsChancePercent":{"all":100.0},"ButcheringWithoutMaskVomitChancePercent":{"all":50.0},"ItemsAfterButchering":{"all":[{"ClassId":"Bone","DropChancePercent":100.0,"QuantityInStackFromPercent":16.0,"QuantityInStackToPercent":84.0,"ConditionFrom":2,"ConditionTo":3,"Foodstages":[]},{"ClassId":"Rag","DropChancePercent":100.0,"QuantityInStackFromPercent":9.0,"QuantityInStackToPercent":74.0,"ConditionFrom":2,"ConditionTo":3,"Foodstages":[]},{"ClassId":"Guts","DropChancePercent":100.0,"QuantityInStackFromPercent":30.0,"QuantityInStackToPercent":100.0,"ConditionFrom":2,"ConditionTo":3,"Foodstages":[]},{"ClassId":"Guts","DropChancePercent":50.0,"QuantityInStackFromPercent":30.0,"QuantityInStackToPercent":100.0,"ConditionFrom":2,"ConditionTo":3,"Foodstages":[]},{"ClassId":"HumanSteakMeat","DropChancePercent":100.0,"QuantityInStackFromPercent":30.0,"QuantityInStackToPercent":100.0,"ConditionFrom":2,"ConditionTo":3,"Foodstages":[6]},{"ClassId":"HumanSteakMeat","DropChancePercent":50.0,"QuantityInStackFromPercent":30.0,"QuantityInStackToPercent":100.0,"ConditionFrom":2,"ConditionTo":3,"Foodstages":[6]}]},"CanBeBackstabbedHandlerIsActive":{"all":0},"CanBeBackstabbed":{"all":1},"VisionRangeMultiplierDay":{"all":2.0},"VisionRangeMultiplierNight":{"all":0.800000011920929},"SizeHandlerIsActive":{"all":0},"SizeFromMultiplier":{"all":0.8999999761581421},"SizeToMultiplier":{"all":1.100000023841858},"SizeDamageScalingIsActive":{"all":0},"SizeBloodVolumeScalingIsActive":{"all":1},"SizeSpeedMultiplierScalingIsActive":{"all":1},"ThrowingProjectilesHandlerIsActive":{"all":1,"SurvivorBase":1},"ThrowingProjectilesHandlerDamageMultiplier":{"all":0.8999999761581421,"SurvivorBase":1.100000023841858,"highstr":1.100000023841858,"lowstr":0.8999999761581421,"mediumstr":1.0},"ThrowingProjectilesHandlerVehiclesDamageMultiplier":{"all":1.7999999523162842,"SurvivorBase":2.200000047683716,"highstr":2.200000047683716,"lowstr":1.7999999523162842,"mediumstr":2.0},"ThrowingProjectilesHandlerThrowForceMultiplier":{"all":1.0},"ThrowingProjectilesHandlerSpreadMultiplier":{"all":1.0},"ThrowingProjectilesHandlerProjectilesList":{"police":["GarbageIfPlayerOnObstacle","PoliceProjectile"],"all":[],"priests":["GarbageIfPlayerOnObstacle","GarbageIfPlayerNonObstacle"],"industrial":["GarbageIfPlayerOnObstacle","IndustrialProjectile"],"prisoners":["GarbageIfPlayerOnObstacle","GarbageIfPlayerNonObstacle"],"fishermen":["GarbageIfPlayerOnObstacle","FishermenProjectile"],"city":["GarbageIfPlayerOnObstacle","CityProjectile"],"firefighters":["GarbageIfPlayerOnObstacle","FirefightersProjectile"],"hunters":["GarbageIfPlayerOnObstacle","HuntersProjectile"],"villagers":["GarbageIfPlayerOnObstacle","VillagersProjectile"],"medics":["GarbageIfPlayerOnObstacle","MedicsProjectile"],"military":["GarbageIfPlayerOnObstacle","MilitaryProjectile"]},"RangeAttacksHandlerIsActive":{"all":1},"RangeAttacksHandlerZombiePlayerDistance":{"all":2.0},"RangeAttacksHandlerPlayerOnObstacleHeight":{"all":0.5}},"Players":{"SmellsHandlerIsActive":1,"SmellRadiusDefault":1.0,"SmellRadiusWounded":6.0,"SmellRadiusBandaged":3.0,"SmellLifetimeSeconds":120.0,"SmellsCountOnMapLimit":1000,"FootstepsNoiseHandlerIsActive":1,"SearchBodyToViewCargo":1,"SearchBodyToViewCargoSeconds":3.0,"SearchBodyExtendLootingToPlayersInRadiusMeters":30.0,"SearchBodyOnlyEmptyHands":0,"QuietDoorOpeningMechanicIsActive":1,"QuietDoorOpeningMechanicDisabledForOpening":1,"QuietDoorOpeningMechanicSeconds":3.0,"QuietDoorOpeningMechanicRestrictedBuildings":["DNA_Strongroom_ColourBase","DNA_Strongroom_Open_Base","DNA_Lockout_ColourBase","DNA_Lockout_OneWayDoor","DNA_Door_NoLock_ColourBase","DNA_WarpDoor_NoLock","DNA_Lockout_Dbl_ColourBase","DNA_Door_NoLock_Dbl_ColourBase","DNA_LockoutSteel_ColourBase","Land_KlimaX_T1Door","Land_KlimaX_T2Door","Land_KlimaX_T3Door","EVG_KeycardDoor","land_bunker_door_base","land_bunker_entrance","land_bunker_entrance1","land_bunker_entrance2","land_bunker_door_area04","Land_WarheadStorage_Main","Jmc_Security_Door","Jmc_Security_Door_Carrier","jmc_dungeon_Door06_Double","ContainerLockedBase"],"DisableVanillaDoorNoiseSystem":1,"OverrideGetHitComponentChances":1,"PainSystemIsActive":1,"PainSystemNotificationsType":2.0,"ShowPainBadges":1,"ShowPainBlur":1,"ShowMedicationInfo":1,"PainHealingRatePerSecondPercent":0.10000000149011612,"HealthDrainWithCriticalPainLimbPerSecondPercent":0.15000000596046448,"HealthDrainWithRedPainLimbPerSecondPercent":0.0,"VehicleCrashPainMultiplier":1.0,"VehicleCollisionsPainMultiplier":1.0,"FallPainMultiplier":1.0,"ExplosionsPainMultiplier":1.0,"FireDamagePainMultiplier":1.0,"UnconsciousWhenOverPainedHeadReceivingHits":1,"CrouchWhenOverPainedTorsoReceivingHits":1,"ArmsLowerWhenAimingWithPainedArms":1,"ArmsLowerWhenOverPainedArmsReceivingHits":1,"ArmsPainShockDamageActions":{"all":2.0},"ArmsPainUnrestrainItems":{"MetalWireLocked":4.0,"all":2.0,"BarbedWireLocked":3.0,"HandcuffsLocked":8.0},"AuditoryHallucinationsWithPainedHead":1,"VomitWithPainedHead":1,"TinnitusWhenHeadReceivingHits":1,"BlurWhenHeadReceivingHits":1,"SoundAttenuationWhenHeadReceivingHits":1,"WeaponSwayWhenHeadReceivingHits":1,"MovementCoordinationImpairmentWhenHeadReceivingHits":1,"PainArmsWhenHitWithoutGloves":1,"ShockIfRunsWithPainedLegs":1,"ShockIfRunsWithPainedArms":1,"ShockIfAttackingWithPainedArms":1,"DisableStaminaRegenWhenTorsoPainDurationSeconds":10.0,"LimbsBreakSystemIsActive":1,"LimbsBreakPainThresholdPercent":30.0,"HeadBreakDurationSeconds":1800.0,"ArmsBreakDurationSeconds":1800.0,"LegsBreakDurationSeconds":1800.0,"TorsoBreakDurationSeconds":1800.0,"LimbsBreakFromFalls":1,"LegsBreakFromTraps":1,"LimbsBreakIgnoreAmmoList":[],"UnconsciousWhenHeadBreak":1,"DisableVanillaBrokenLegWalk":1,"LimbsDeepWoundSystemIsActive":1,"HeadDeepWoundDurationSeconds":1800.0,"ArmsDeepWoundDurationSeconds":1800.0,"LegsDeepWoundDurationSeconds":1800.0,"TorsoDeepWoundDurationSeconds":1800.0,"LimbsDeepWoundConsciousBleedRateMultiplier":1.0,"LimbsDeepWoundUnconsciousBleedRateMultiplier":1.0,"LimbsDeepWoundVanillaCutBleedRateMultiplier":0.10000000149011612,"LimbsDeepWoundFromFalls":1,"LegsDeepWoundFromTraps":1,"LimbsBulletSystemIsActive":1,"LimbsBulletTimeToSecondStageSeconds":7200.0,"InternalBleedingSystemIsActive":1,"InternalBleedingBloodLossRateMl":2.0,"DestroyedDoorNotificationType":2.0,"NoiseMultiplierDay":2.0,"NoiseMultiplierNight":2.0,"NoiseMultiplierCrouchDay":1.0,"NoiseMultiplierCrouchNight":1.0,"NoiseMultiplierLadderDay":0.20000000298023224,"NoiseMultiplierLadderNight":0.20000000298023224,"CamoClothingVisibilityMultipliers":{"GhillieSuit_ColorBase":0.800000011920929,"all":1.0,"GhillieTop_ColorBase":0.800000011920929,"GhillieHood_ColorBase":0.800000011920929},"HeadgearItemsWithVomitProtection":{"CrookedNose":0,"SantasBeard":0,"HockeyMask":0,"MotoHelmet_ColorBase":1}},"Vehicles":{"Noise":{"all":{"RpmMaxMeters":120.0,"RpmIdleMeters":40.0},"Offroad_02":{"RpmMaxMeters":140.0,"RpmIdleMeters":50.0},"Truck_01_Base":{"RpmMaxMeters":150.0,"RpmIdleMeters":60.0},"Bicycle_Base":{"RpmMaxMeters":40.0,"RpmIdleMeters":20.0}},"CollisionsSoundThreshold":{"all":50.0},"CollisionsSpeedReductionMultiplier":{"all":1.0},"CollisionsDamageSpeedThresholdKmH":{"all":10.0,"Bicycle_Base":0.0}},"LossInterestToIrritantAfterSeconds":120.0,"LightInHouseMultiplier":0.20000000298023224,"SoundInHouseMultiplier":0.5,"SuppressorShotCooldownSeconds":5.0,"SuppressorShotOverfireDistanceMeters":80.0,"BloodParticlesLimit":1000.0,"BloodParticleDurationSeconds":600.0,"SaveConfigAfterInit":0};
+const JP_META = {"SearchHandlerIsActive": ["捜索システム", "感染者の捜索処理を有効・無効にします。", ""], "SearchSphereRadiusIncreaseEverySeconds": ["捜索範囲の拡大間隔", "捜索範囲を拡大する時間間隔です。", "秒"], "SearchSphereDistanceToRadiusMultiplier": ["距離→捜索半径倍率", "対象までの距離を捜索半径へ反映する倍率です。", "倍率"], "SearchSphereRadiusMin": ["最小捜索半径", "捜索範囲の最小半径です。", "m"], "SearchSphereRadiusMax": ["最大捜索半径", "通常の捜索範囲の最大半径です。", "m"], "SearchSphereRadiusBurst": ["バースト捜索半径", "急激な反応時に使用される捜索半径です。", "m"], "SpeedHandlerIsActive": ["速度制御", "感染者の速度制御を有効・無効にします。", ""], "SpeedMinimumInCalmMode": ["平常時 最低速度", "Calm状態での最低速度です。", ""], "SpeedLimitInCalmMode": ["平常時 速度上限", "Calm状態での速度上限です。", ""], "SpeedMultiplierInCalmMode": ["平常時 速度倍率", "Calm状態の速度倍率です。", "倍率"], "SpeedMinimumInSearchMode": ["捜索時 最低速度", "Search状態での最低速度です。", ""], "SpeedLimitInSearchMode": ["捜索時 速度上限", "Search状態での速度上限です。", ""], "SpeedMultiplierInSearchMode": ["捜索時 速度倍率", "Search状態の速度倍率です。", "倍率"], "SpeedMinimumInChaseMode": ["追跡時 最低速度", "Chase状態での最低速度です。", ""], "SpeedLimitInChaseMode": ["追跡時 速度上限", "Chase状態での速度上限です。", ""], "SpeedMultiplierInChaseMode": ["追跡時 速度倍率", "Chase状態の速度倍率です。", "倍率"], "SpeedNoLimitsFromDistanceMeters": ["速度制限解除距離", "指定距離に関係する速度制限設定です。", "m"], "SmellsHandlerIsActive": ["嗅覚システム", "匂いによる検知処理を有効・無効にします。", ""], "SmellsSphereRadiusInCalmMode": ["平常時 嗅覚半径", "Calm状態での匂い検知半径です。", "m"], "SmellsSphereRadiusInSearchMode": ["捜索時 嗅覚半径", "Search状態での匂い検知半径です。", "m"], "SmellsChaseMultiplier": ["追跡時 嗅覚倍率", "Chase状態における匂い処理の倍率です。", "倍率"], "SmellsAllowStealthKills": ["嗅覚とステルス処理", "嗅覚システムに関連するステルス処理を許可します。", ""], "LongVisionHandlerIsActive": ["遠距離視認", "Long Vision機能を有効・無効にします。", ""], "LongVisionMetersInSearchModeDay": ["捜索時・昼 視認距離", "Search状態・昼間のLong Vision距離です。", "m"], "LongVisionMetersInSearchModeNight": ["捜索時・夜 視認距離", "Search状態・夜間のLong Vision距離です。", "m"], "LongVisionMetersInCalmModeDay": ["平常時・昼 視認距離", "Calm状態・昼間のLong Vision距離です。", "m"], "LongVisionMetersInCalmModeNight": ["平常時・夜 視認距離", "Calm状態・夜間のLong Vision距離です。", "m"], "LongVisionVisualAcuityInSearchModeDay": ["捜索時・昼 視力倍率", "Search状態・昼間のLong Vision視認性能値です。", "倍率"], "LongVisionVisualAcuityInSearchModeNight": ["捜索時・夜 視力倍率", "Search状態・夜間のLong Vision視認性能値です。", "倍率"], "LongVisionVisualAcuityInCalmModeDay": ["平常時・昼 視力倍率", "Calm状態・昼間のLong Vision視認性能値です。", "倍率"], "LongVisionVisualAcuityInCalmModeNight": ["平常時・夜 視力倍率", "Calm状態・夜間のLong Vision視認性能値です。", "倍率"], "LongVisionPersistAfterIrritationSeconds": ["遠距離視認 継続時間", "刺激を受けた後にLong Vision状態を維持する時間です。", "秒"], "LongVisionAllowIgnoreWeather": ["天候の影響を無視", "Long Visionで天候の影響を無視する設定です。", ""], "ReturnToSpawnHandlerIsActive": ["スポーン地点へ戻る", "スポーン地点へ戻る処理を有効・無効にします。", ""], "ReturnToSpawnRadiusMeters": ["帰還判定半径", "スポーン地点への帰還処理に使う半径です。", "m"], "UpJumpHandlerIsActive": ["上方向ジャンプ", "上方向へのジャンプ処理を有効・無効にします。", ""], "UpJumpHeightMax": ["上方向 最大ジャンプ高", "上方向ジャンプで扱う最大高さです。", "m"], "UpJumpChancePercent": ["上方向ジャンプ確率", "条件成立時のジャンプ確率です。", "%"], "UpJumpCooldownSeconds": ["ジャンプ クールダウン", "上方向ジャンプ後の待ち時間です。", "秒"], "DownJumpHandlerIsActive": ["下方向ジャンプ", "下方向へのジャンプ処理を有効・無効にします。", ""], "DownJumpHeightMax": ["下方向 最大高さ", "下方向ジャンプで扱う最大高さです。", "m"], "AttackCarHandlerIsActive": ["車両攻撃", "車両に対する攻撃処理を有効・無効にします。", ""], "ReactHandlerIsActive": ["刺激への反応", "光・音などへの反応処理を有効・無効にします。", ""], "DamageToPlayerHandlerIsActive": ["プレイヤーダメージ調整", "感染者からプレイヤーへのダメージ調整を有効・無効にします。", ""], "DamageToPlayerHealthMultiplier": ["体力ダメージ倍率", "プレイヤーへのHealthダメージ倍率です。", "倍率"], "DamageToPlayerShockMultiplier": ["ショックダメージ倍率", "プレイヤーへのShockダメージ倍率です。", "倍率"], "DamageToPlayerStaminaPercent": ["スタミナダメージ", "プレイヤーのスタミナへ与える割合です。", "%"], "DamageToPlayerBleedingChancePercent": ["出血発生率", "攻撃時の出血発生率設定です。", "%"], "DamageToZombieHandlerIsActive": ["感染者ダメージ調整", "感染者が受けるダメージ調整を有効・無効にします。", ""], "VisionRangeMultiplierDay": ["昼間 視認距離倍率", "昼間の視認距離倍率です。", "倍率"], "VisionRangeMultiplierNight": ["夜間 視認距離倍率", "夜間の視認距離倍率です。", "倍率"], "SizeHandlerIsActive": ["サイズ変更", "感染者サイズ変更システムを有効・無効にします。", ""], "ThrowingProjectilesHandlerIsActive": ["投擲システム", "ゲーム内の投擲物処理を有効・無効にします。", ""]};
+let data = structuredClone(DEFAULT_CONFIG);
+const STORAGE_KEY = 'InediaInfectedAI_Config_Editor_saved_v1';
+
+function saveLocal(silent=false){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if(!silent) statusEl.textContent='ブラウザに設定を保存しました';
+    return true;
+  }catch(e){
+    if(!silent) alert('設定を保存できません: '+e.message);
+    return false;
+  }
+}
+function restoreLocal(){
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(!raw){ alert('保存済みの設定がありません。先に「設定を保存」を押してください。'); return; }
+  try{
+    data=JSON.parse(raw);
+    render();
+    statusEl.textContent='保存済み設定を復元しました';
+  }catch(e){ alert('保存済み設定を復元できません: '+e.message); }
+}
+const app=document.getElementById('app'), nav=document.getElementById('nav'), statusEl=document.getElementById('status');
+
+function isToggleKey(k,v){
+ if(!(v===0||v===1)) return false;
+ const p=[
+ /IsActive$/i,/^Allow/i,/^CanBe/i,/^Show/i,/^Disable/i,/^Prevent/i,
+ /^AttackPlayersUnconscious$/i,/^SearchBodyToViewCargo$/i,/^SearchBodyOnlyEmptyHands$/i,
+ /^SmellsAllowStealthKills$/i,/^Break/i,/^Crouch/i,/^ArmsLower/i,/^Auditory/i,
+ /^Tinnitus/i,/^Blur/i,/^SoundAttenuation/i,/^MovementCoordination/i,/^PainArms/i,
+ /^ShockIf/i,/^Unconscious/i,/^ReactAndDestroy.*Visual$/i
+ ];
+ return p.some(r=>r.test(k));
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function getAt(path){return path.reduce((o,k)=>o[k],data)}
+function setAt(path,val){let o=data;for(let i=0;i<path.length-1;i++)o=o[path[i]];o[path.at(-1)]=val; saveLocal(true); statusEl.textContent='変更あり（自動保存済み）';}
+function simpleObject(o){return o&&typeof o==='object'&&!Array.isArray(o)&&Object.values(o).every(v=>['number','string','boolean'].includes(typeof v))}
+function makeControl(key,val,path){
+ const wrap=document.createElement('div');wrap.className='control';
+ if(isToggleKey(key,val)){
+   const lab=document.createElement('label');lab.className='switch';
+   const inp=document.createElement('input');inp.type='checkbox';inp.checked=!!val;
+   const sl=document.createElement('span');sl.className='slider';
+   const state=document.createElement('span');state.className='badge '+(inp.checked?'on':'off');state.textContent=inp.checked?'ON (1)':'OFF (0)';
+   inp.onchange=()=>{setAt(path,inp.checked?1:0);state.textContent=inp.checked?'ON (1)':'OFF (0)';state.className='badge '+(inp.checked?'on':'off')};
+   lab.append(inp,sl);wrap.append(lab,state);return wrap;
+ }
+ if(typeof val==='number'){
+   const inp=document.createElement('input');inp.type='number';inp.step=Number.isInteger(val)?'1':'any';inp.value=val;
+   inp.onchange=()=>{const n=Number(inp.value); if(Number.isFinite(n)) setAt(path,n)};wrap.append(inp);return wrap;
+ }
+ if(typeof val==='string'){
+   const inp=document.createElement('input');inp.type='text';inp.value=val;inp.oninput=()=>setAt(path,inp.value);wrap.append(inp);return wrap;
+ }
+ const ta=document.createElement('textarea');ta.value=JSON.stringify(val,null,2);
+ ta.onchange=()=>{try{const x=JSON.parse(ta.value);setAt(path,x);ta.style.borderColor='';statusEl.textContent='変更あり'}catch(e){ta.style.borderColor='var(--bad)';statusEl.textContent='JSON入力エラー'}};
+ wrap.append(ta);return wrap;
+}
+function field(key,val,path){
+ const row=document.createElement('div');row.className='field';row.dataset.search=(key+' '+path.join('.')).toLowerCase();
+ const left=document.createElement('div');left.innerHTML='<div class="name">'+esc(key)+'</div><div class="path">'+esc(path.join('.'))+'</div>';
+ row.append(left,makeControl(key,val,path));return row;
+}
+function renderObject(obj,container,path,depth=0){
+ for(const [k,v] of Object.entries(obj)){
+   const p=[...path,k];
+   if(v&&typeof v==='object'&&!Array.isArray(v)&&!simpleObject(v)){
+      const d=document.createElement('details');d.className='groupbox';d.open=depth<1;
+      const s=document.createElement('summary');s.textContent=k;d.append(s);
+      renderObject(v,d,p,depth+1);container.append(d);
+   }else if(simpleObject(v)){
+      const d=document.createElement('details');d.className='groupbox';
+      const sm=document.createElement('summary');sm.textContent=k+'  ('+Object.keys(v).length+' 項目)';d.append(sm);
+
+      // "all": number/bool を持つ設定は対象別オーバーライドとして直接編集可能にする
+      const override = Object.prototype.hasOwnProperty.call(v,'all') &&
+        Object.values(v).every(x => typeof x==='number' || typeof x==='boolean');
+
+      for(const [ck,cv] of Object.entries(v)) d.append(field(ck,cv,[...p,ck]));
+
+      if(override){
+        d.open=true;
+        const panel=document.createElement('div');panel.className='overrideEditor';
+        const ttl=document.createElement('div');ttl.className='overrideTitle';ttl.textContent='＋ 対象別設定を追加';
+        const hint=document.createElement('div');hint.className='overrideHint';
+        hint.textContent='クラス名またはグループ名を指定して個別値を追加できます。例: ZmbM__Runner_Base / ZmbF_Runner_Base / highstr';
+        const target=document.createElement('input');target.type='text';target.placeholder='対象名（例: highstr）';
+        const value=document.createElement('input');value.type='number';value.step='any';value.value=String(v.all);value.placeholder='値';
+        const add=document.createElement('button');add.type='button';add.textContent='追加';
+        const row=document.createElement('div');row.className='overrideRow';row.append(target,value,add);
+        panel.append(ttl,hint,row);d.append(panel);
+
+        const doAdd=()=>{
+          const name=target.value.trim();
+          if(!name){alert('対象名を入力してください');return;}
+          if(Object.prototype.hasOwnProperty.call(v,name)){alert('その対象はすでに存在します');return;}
+          const num=Number(value.value);
+          if(!Number.isFinite(num)){alert('値を入力してください');return;}
+          v[name]=num;
+          saveLocal(true);
+          statusEl.textContent=name+' を追加しました（自動保存済み）';
+          render(); // 追加した対象を通常の編集行として即表示
+        };
+        add.onclick=doAdd;
+        target.addEventListener('keydown',e=>{if(e.key==='Enter')doAdd();});
+        value.addEventListener('keydown',e=>{if(e.key==='Enter')doAdd();});
+      }
+      container.append(d);
+   }else container.append(field(k,v,p));
+ }
+}
+function render(){
+ app.innerHTML='';nav.innerHTML='';
+ for(const [top,val] of Object.entries(data)){
+   const d=document.createElement('details');d.className='section';d.open=['Zombies','Players'].includes(top);d.id='sec-'+top.replace(/\W/g,'');
+   const s=document.createElement('summary');s.textContent=top;d.append(s);
+   const b=document.createElement('div');b.className='sectionbody';
+   if(val&&typeof val==='object'&&!Array.isArray(val)) renderObject(val,b,[top]); else b.append(field(top,val,[top]));
+   d.append(b);app.append(d);
+   const nb=document.createElement('button');nb.textContent=top;nb.onclick=()=>{d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'})};nav.append(nb);
+ }
+ applySearch();
+}
+function applySearch(){
+ const q=document.getElementById('search').value.trim().toLowerCase();
+ document.querySelectorAll('.field').forEach(el=>el.style.display=(!q||el.dataset.search.includes(q))?'grid':'none');
+ if(q) document.querySelectorAll('.section,.groupbox').forEach(d=>d.open=true);
+}
+document.getElementById('search').addEventListener('input',applySearch);
+document.getElementById('file').addEventListener('change',async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{data=JSON.parse(await f.text());saveLocal(true);render();statusEl.textContent='読込完了・自動保存済み: '+f.name}catch(err){alert('JSONを読み込めません: '+err.message)}
+});
+document.getElementById('saveLocal').onclick=()=>{
+  saveLocal(true);
+  const json=JSON.stringify(data,null,4);
+  const blob=new Blob([json],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='InediaInfectedAIConfig.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  statusEl.textContent='設定を保存し、InediaInfectedAIConfig.json をダウンロードしました';
+};
+document.getElementById('restoreLocal').onclick=restoreLocal;
+document.getElementById('reset').onclick=()=>{if(confirm('内蔵された公式初期設定に戻しますか？')){data=structuredClone(DEFAULT_CONFIG);render();statusEl.textContent='初期状態'}};
+document.getElementById('validate').onclick=()=>{
+ try{JSON.stringify(data);alert('JSON構造は正常です。');statusEl.textContent='検証OK'}catch(e){alert('エラー: '+e.message)}
+};
+document.getElementById('export').onclick=()=>{
+ const txt=JSON.stringify(data,null,4);
+ const blob=new Blob([txt],{type:'application/json;charset=utf-8'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='InediaInfectedAIConfig.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ statusEl.textContent='JSON出力完了';
+};
+
+function decorateJapaneseGuides(){
+  document.querySelectorAll('.jpGuide').forEach(x=>x.remove());
+  const allEls=[...document.querySelectorAll('label, .key, .field, .row, summary')];
+  for(const [key,m] of Object.entries(JP_META)){
+    let target=null;
+    for(const el of allEls){
+      const t=(el.textContent||'').trim();
+      if(t===key || t.startsWith(key+' ') || t.includes(key)){
+        target=el; break;
+      }
+    }
+    if(!target) continue;
+    const host=target.closest('.field,.row,details') || target.parentElement;
+    if(!host || host.querySelector(':scope > .jpGuide')) continue;
+    const box=document.createElement('div');
+    box.className='jpGuide';
+    box.innerHTML='<div class="jpTitle">'+escapeHtml(m[0])+'</div>'+
+      '<div class="jpDesc">'+escapeHtml(m[1])+'</div>'+
+      (m[2]?'<span class="jpUnit">単位: '+escapeHtml(m[2])+'</span>':'');
+    target.insertAdjacentElement('afterend',box);
+  }
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const _origRender = render;
+render = function(){ _origRender(); setTimeout(decorateJapaneseGuides,0); };
+
+
+function pathForPrimitiveArray(target){
+ const sig=JSON.stringify(target);
+ function walk(o,p){
+  if(Array.isArray(o)&&JSON.stringify(o)===sig)return p;
+  if(o&&typeof o==='object')for(const k of Object.keys(o)){const r=walk(o[k],p.concat(k));if(r)return r;}
+  return null;
+ }
+ return walk(data,[]);
+}
+function getPath(p){let o=data;for(const k of p)o=o[k];return o;}
+function commitPath(p,v){let o=data;for(let i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=v;saveLocal(true);statusEl.textContent='変更あり（自動保存済み）';}
+function enhanceEditableLists(){
+ document.querySelectorAll('textarea').forEach(ta=>{
+  if(ta.dataset.listui)return;
+  let a;try{a=JSON.parse(ta.value)}catch(e){return}
+  if(!Array.isArray(a)||!a.every(x=>typeof x==='string'||typeof x==='number'))return;
+  const p=pathForPrimitiveArray(a);if(!p)return;ta.dataset.listui='1';
+  const box=document.createElement('div');box.className='editList';
+  function draw(){
+   box.innerHTML='<div class="editListTitle">'+p[p.length-1]+' — リスト編集</div>';
+   const arr=getPath(p);
+   arr.forEach((v,i)=>{
+    const r=document.createElement('div');r.className='editListRow';
+    const input=document.createElement('input');input.type=typeof v==='number'?'number':'text';input.value=v;
+    input.onchange=()=>{arr[i]=typeof v==='number'?Number(input.value):input.value;commitPath(p,arr);ta.value=JSON.stringify(arr,null,2)};
+    const del=document.createElement('button');del.type='button';del.textContent='削除';
+    del.onclick=()=>{arr.splice(i,1);commitPath(p,arr);ta.value=JSON.stringify(arr,null,2);draw()};
+    r.append(input,del);box.appendChild(r);
+   });
+   const add=document.createElement('button');add.type='button';add.className='editListAdd';add.textContent='＋ 項目を追加';
+   add.onclick=()=>{arr.push('');commitPath(p,arr);ta.value=JSON.stringify(arr,null,2);draw()};box.appendChild(add);
+  }
+  draw();ta.parentElement.insertBefore(box,ta);
+  const n=document.createElement('div');n.className='wikiNote';
+  n.textContent='Wikiの例にあるクラス名（例: GhillieHood など）を、上の欄で追加・変更・削除できます。';
+  ta.parentElement.insertBefore(n,ta);
+ });
+}
+const __renderV5=render;
+render=function(){__renderV5();setTimeout(enhanceEditableLists,10);}
+
+
+
+data = structuredClone(DEFAULT_CONFIG);
+statusEl.textContent='公式初期設定で起動';
+render();
+</script>
+</body>
+</html>
