@@ -1,0 +1,78 @@
+[
+  {
+    "name": "初期起動・自動復元なし",
+    "result": "PASS"
+  },
+  {
+    "name": "対象3件追加・小数・二重アンダースコア保持",
+    "result": "PASS"
+  },
+  {
+    "name": "all変更で対象保持",
+    "result": "PASS"
+  },
+  {
+    "name": "別速度設定・0追加",
+    "result": "PASS"
+  },
+  {
+    "name": "空名・重複・空数値拒否",
+    "result": "PASS"
+  },
+  {
+    "name": "対象リネーム・削除・all保護",
+    "result": "PASS"
+  },
+  {
+    "name": "保存処理・JSON往復・明示復元",
+    "result": "PASS"
+  },
+  {
+    "name": "未知キー・入れ子・同一配列と空配列のパス分離",
+    "result": "PASS"
+  },
+  {
+    "name": "不正ルート拒否",
+    "result": "PASS"
+  },
+  {
+    "name": "localStorage利用不可の例外処理",
+    "result": "PASS"
+  },
+  {
+    "name": "初期化は保存スナップショットを維持",
+    "result": "PASS"
+  },
+  {
+    "name": "402設定の説明網羅",
+    "result": "PASS"
+  },
+  {
+    "name": "言語差し替えで設定・ブラウザ保存不変",
+    "result": "PASS"
+  },
+  {
+    "name": "同名設定の名前空間分離と日本語検索",
+    "result": "PASS"
+  },
+  {
+    "name": "ワイルドカード説明と完全一致優先",
+    "result": "PASS"
+  },
+  {
+    "name": "不正言語・危険URLは原子的に拒否",
+    "result": "PASS"
+  },
+  {
+    "name": "説明中のHTMLはテキストとして保持",
+    "result": "PASS"
+  },
+  {
+    "name": "内蔵日本語への復帰・言語出力",
+    "result": "PASS"
+  },
+  {
+    "name": "同梱言語ファイル424件の読込",
+    "result": "PASS"
+  }
+]
