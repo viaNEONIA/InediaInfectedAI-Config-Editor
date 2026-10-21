@@ -1,5 +1,22 @@
 # InediaInfectedAI Config Editor
 
+> **開発基準の整理（2026-10-18）**  
+> このリポジトリのmainはv9（`dbb470cf5be51aaee6b21d6189c1a5adaf83d600`）です。外部成果物v9.2は未統合です。今回のPRは文書整備のみで、HTMLの変更はありません。  
+> 実ブラウザで確認済みの正常動作基準は未確立です。以下の従来説明は機能説明であり、動作確認の証拠ではありません。
+
+## 開発管理文書
+
+- [正式仕様・状態分類](SPEC.md)
+- [システム構成・依存関係](ARCHITECTURE.md)
+- [試験計画](TEST_PLAN.md) / [試験結果](TEST_RESULTS.md)
+- [今後の計画・既知不具合](ROADMAP.md)
+- [変更履歴](CHANGELOG.md) / [AI開発ルール](AGENTS.md)
+
+現在はビルド不要で `InediaInfectedAI_Config_Editor_v9.html` をブラウザで開きます。mainには外部言語JSON機能やnpmテスト構成はまだありません。未実装・未検証・既知不具合は上記管理文書を正本とします。
+
+---
+
+
 InediaInfectedAI の設定ファイル `InediaInfectedAIConfig.json` を、ブラウザ上で編集するための非公式GUIエディターです。
 
 JSONを直接編集することなく、ON/OFF、数値、感染者ごとの個別設定などを画面上から変更できます。
